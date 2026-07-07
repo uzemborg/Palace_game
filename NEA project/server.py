@@ -27,7 +27,7 @@ def check_winner(game, player):
     pdata = game["players"][player]
     if (len(pdata["hand"]) == 0 and len(pdata["up"]) == 0 and len(pdata["down"]) == 0):
         game["winner"] = player
-
+        
 def create_deck():
     deck = []
     for suit in SUITS:
@@ -43,7 +43,7 @@ def can_play(card, pile):
     if rank in ("2", "10"):
         return True
     top = pile[-1]
-    if top["rank"] == "2":
+    if top["rank"] == "2":       
         return True
     if top["rank"] == "7":
         return (RANK_VALUES[rank]<=RANK_VALUES[top["rank"]])

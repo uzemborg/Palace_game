@@ -1,5 +1,5 @@
 import requests
-server="http://192.168.68.58:5000"
+server="https://palace-game.onrender.com"
 class Net:
     def create(self):
         return requests.post(f"{server}/create").json()
