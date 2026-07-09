@@ -205,7 +205,7 @@ def play_down(game_id):
         while (len(pdata["hand"]) < 3 and game["deck"]):
             pdata["hand"].append(game["deck"].pop())
         game["turn"] = (game["turn"] + 1) % len(game["players"])
-
+        check_winner(game, player)
         return {
             "success": True,
             "card": card
@@ -220,8 +220,6 @@ def play_down(game_id):
             "success": False,
             "pickup": True
         }
-
-    check_winner(game, player)
 
 @app.post("/setup/<game_id>")
 def setup(game_id):

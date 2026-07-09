@@ -373,6 +373,16 @@ def end_drag(event):
         dragging_card = None
         return
 
+    if game_mode == "multi" and p_phase == "down":
+        for box in upcard_slot_boxes:
+            canvas.itemconfigure(box, state="hidden")
+        canvas.itemconfigure(slot_box_pile, state="hidden")
+        result = multiplayer.net.play_down(multiplayer.game_id, multiplayer.player_id)
+        current_img = None
+        selected_group = []
+        dragging_card = None
+        return
+
     cx, cy = canvas.coords(cid)
     in_pile = (
         abs(cx - pile_pos[0]) <= card_width // 2 and
@@ -459,10 +469,6 @@ def end_drag(event):
     for box in upcard_slot_boxes:
         canvas.itemconfigure(box, state="hidden")
     canvas.itemconfigure(slot_box_pile, state="hidden")
-
-    if game_mode == "multi" and p_phase == "down":
-        result = multiplayer.net.play_down(multiplayer.game_id, multiplayer.player_id)
-        print(result)
 
     current_img = None
     selected_group = []
