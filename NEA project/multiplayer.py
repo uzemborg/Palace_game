@@ -5,7 +5,7 @@ import __main__ as main
 import accounts
 
 net = Net()
-game_id = None
+game_id = None    
 player_id = None
 
 network_card_lookup = {}
@@ -273,9 +273,6 @@ def refresh_game():
     main.root.after(500, refresh_game)
 
 def show_winner(winner):
-    # Award/deduct ELO for whoever is currently logged in on this
-    # client. main.user_var is set by LoginScreen.submit() on a
-    # successful login and stays set for the rest of the session.
     if main.user_var:
         if winner == player_id:
             accounts.apply_elo_change(main.user_var, 50)
@@ -427,6 +424,7 @@ class HostScreen:
 
     def start_game(self):
         net.start(game_id)
+        self.destroy()
 
     def destroy(self):
         self.canvas.delete(self.canvas_window)
@@ -459,6 +457,7 @@ class JoinScreen:
         player_id = player["player_id"]
         tk.Label(self.root, text=f"Joined: {game_id}", font=("Arial", 20, "bold"), bg="green", fg="white", highlightbackground="green").pack(pady=20)
         refresh_lobby()
+        self.destroy()
 
     def destroy(self):
         self.canvas.delete(self.canvas_window)
