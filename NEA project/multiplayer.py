@@ -27,6 +27,9 @@ setup_button = None
 
 multiplayer_screen = None
 
+join_label = main.canvas.create_text(main.sx(960), main.sy(1060), text="", font=("Arial", 20, "bold"), fill="white", state="hidden", tags=("join_label",))
+host_label = main.canvas.create_text(main.sx(960), main.sy(1060), text="", font=("Arial", 20, "bold"), fill="white", state="hidden", tags=("host_label",))
+
 def pickup_pile(event=None):
     if main.game_mode != "multi":
         return
@@ -75,28 +78,44 @@ def create_opponent_displays():
 
 def render_opponent_upcards(state):
     global opponent_up_cards
+    opponents = []
+
     for obj in opponent_up_cards:
         main.canvas.delete(obj)
     opponent_up_cards.clear()
-    opponents = [p for p in state["player_data"] if p["id"] != player_id]
+
+    for p in state["player_data"]:
+        if p["id"] != player_id:
+            opponents.append(p)
+
     for row, p in enumerate(opponents):
+        if len(opponents) == 1:
+            start_x = 810
+        elif row == 0:
+            start_x = 250
+        else:
+            start_x = 1450
+
         for col, card in enumerate(p["up"]):
             rank = card["rank"]
             suit = card["suit"]
             img = main.load_card(cards_dict(f"{rank}{suit}"), 5, 5)
-            if len(opponents) == 1:
-                cid = main.canvas.create_image(main.sx(810 + col * 150), main.sy(150 + row * 150), image=img)
-            else:
-                cid = main.canvas.create_image(main.sx(300 + col * 150), main.sy(150 + row * 150), image=img)
+            cid = main.canvas.create_image(main.sx(start_x + col * 150), main.sy(150), image=img)
             opponent_up_cards.append(cid)
             main.canvas.tag_raise(cid)
 
 def render_opponent_downcards(state):
     global opponent_down_cards
+    opponents = []
+
     for obj in opponent_down_cards:
         main.canvas.delete(obj)
     opponent_down_cards.clear()
-    opponents = [p for p in state["player_data"] if p["id"] != player_id]
+
+    for p in state["player_data"]:
+        if p["id"] != player_id:
+            opponents.append(p)
+
     for row, p in enumerate(opponents):
         for col in range(p["down_count"]):
             img = main.load_card(cards_dict("back"), 22, 22)
@@ -108,10 +127,16 @@ def render_opponent_downcards(state):
 
 def render_opponent_hand(state):
     global opponent_hand
+    opponents = []
+
     for obj in opponent_hand:
         main.canvas.delete(obj)
     opponent_hand.clear()
-    opponents = [p for p in state["player_data"] if p["id"] != player_id]
+
+    for p in state["player_data"]:
+        if p["id"] != player_id:
+            opponents.append(p)
+
     for row, p in enumerate(opponents):
         for col in range(p["hand_count"]):
             img = main.load_card(cards_dict("back"), 22, 22)
@@ -175,6 +200,7 @@ def render_network_hand(cards):
 
 def render_network_upcards(cards):
     canvas = main.canvas
+    main.p_up.clear()
     for i, card in enumerate(cards):
         rank = card["rank"]
         suit = card["suit"]
@@ -186,6 +212,7 @@ def render_network_upcards(cards):
         main.card_faces[cid] = face
         main.card_suits[cid] = suit
         network_card_lookup[cid] = {"rank": rank, "suit": suit}
+        main.p_up.append(cid)
 
 def render_network_deck(deck_count):
     canvas = main.canvas
@@ -419,7 +446,7 @@ class HostScreen:
         game_id = game["game_id"]
         player = net.join(game_id)
         player_id = player["player_id"]
-        tk.Label(self.root, text=f"Hosting at: {game_id}", font=("Arial", 20, "bold"), bg="white", fg="green", highlightbackground="green").pack(pady=0, padx=0)
+        main.canvas.itemconfigure("host_label", state="normal", text=f"Hosting at: {game_id}")
         refresh_lobby()
 
     def start_game(self):
@@ -442,8 +469,8 @@ class JoinScreen:
         self.canvas_window = canvas.create_window(main.sx(960), main.sy(540), window=self.frame)
 
         tk.Label(self.frame, text="Join Code", font=("Arial", 25, "bold"), bg="green", fg="white").pack()
-        self.code_entry = tk.Entry(self.frame, font=("Arial", 25, "bold"))
-        self.code_entry.pack()
+        entry = self.code_entry = tk.Entry(self.frame, font=("Arial", 25, "bold"))
+        entry.pack()
         tk.Button(self.frame, text="Join Game", font=("Arial", 30, "bold"), bg="white", fg="green", relief="flat", command=self.join_game).pack(pady=10)
         tk.Button(self.frame, text="Back", font=("Arial", 10, "bold"), bg="white", fg="green", relief="flat", padx=20, pady=6, command=self.back).pack(pady=(10, 0))
 
@@ -455,7 +482,7 @@ class JoinScreen:
         game_id = code
         player = net.join(game_id)
         player_id = player["player_id"]
-        tk.Label(self.root, text=f"Joined: {game_id}", font=("Arial", 20, "bold"), bg="green", fg="white", highlightbackground="green").pack(pady=20)
+        main.canvas.itemconfigure("host_label", state="normal", text=f"Joined: {game_id}")
         refresh_lobby()
         self.destroy()
 

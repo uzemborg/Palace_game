@@ -1,10 +1,15 @@
 from flask import Flask, request, jsonify
 import random
+import traceback
 
 app=Flask(__name__)
 games={}
 
-SUITS = ["S", "H"]
+@app.errorhandler(Exception)
+def handle_any_error(e):
+    return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
+
+SUITS = ["S", "H", "D", "C"]
 RANKS = ["2", "3", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
 RANK_VALUES = {
@@ -34,7 +39,7 @@ def create_deck():
         for rank in RANKS:
             deck.append({"rank": rank,"suit": suit})
     random.shuffle(deck)
-    return deck[:30]
+    return deck
 
 def can_play(card, pile):
     if not pile:

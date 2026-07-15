@@ -274,19 +274,25 @@ def go_home():
     current_img = None
     dragging_card = None
 
+    canvas.itemconfigure("join_label", state="hidden")
+    canvas.itemconfigure("host_label", state="hidden")
+
     StartScreen(root, canvas)
 
 def start_drag(event):
     global current_img, drag_offset_x, drag_offset_y, selected_group, dragging_card
-
+ 
     if game_mode == "multi" and turn != "player" and state != "select_up":
         return
-
+ 
     clicked = canvas.find_closest(event.x, event.y)
     if not clicked:
         return
 
     cid = clicked[0]
+    if canvas.itemcget(cid, "state") == "hidden":
+        return
+
     dragging_card = cid
     tags = canvas.gettags(cid)
 
@@ -307,8 +313,17 @@ def start_drag(event):
 
     if event.state & 0x0001:
         rank = card_ranks[cid]
-        hand_cards = get_p_hand()
-        selected_group = [card for card in hand_cards if card_ranks[card] == rank]
+        if "p_hand" in tags:
+            source_cards = get_p_hand()
+        elif "p_up" in tags:
+            source_cards = p_up
+        elif "p_down" in tags:
+            source_cards = p_down
+        else:
+            source_cards = [cid]
+        selected_group = [card for card in source_cards if card_ranks.get(card) == rank]
+        if not selected_group:
+            selected_group = [cid]
         for card in selected_group:
             canvas.tag_raise(card)
         current_img = cid
@@ -377,7 +392,18 @@ def end_drag(event):
         for box in upcard_slot_boxes:
             canvas.itemconfigure(box, state="hidden")
         canvas.itemconfigure(slot_box_pile, state="hidden")
+
         result = multiplayer.net.play_down(multiplayer.game_id, multiplayer.player_id)
+        print(result)
+
+        if result.get("success") or result.get("pickup"):
+            down_cards = canvas.find_withtag("p_down")
+            if down_cards:
+                canvas.delete(down_cards[-1])
+
+            if not result.get("success"):
+                p_phase = "hand"
+
         current_img = None
         selected_group = []
         dragging_card = None
@@ -588,7 +614,7 @@ class LeaderboardScreen:
     def close(self):
         self.start_screen.canvas.itemconfigure(self.start_screen.canvas_window, state="normal")
         self.frame.destroy()
-
+        
 class StartScreen:
     def __init__(self, root, canvas):
         global user_var
