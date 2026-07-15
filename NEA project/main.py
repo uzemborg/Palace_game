@@ -436,11 +436,9 @@ def end_drag(event):
             return
 
         if game_mode == "multi":
-            played_card = selected_group[0]
-            result = multiplayer.net.play(
-                multiplayer.game_id, multiplayer.player_id,
-                multiplayer.network_card_lookup[played_card]
-            )
+            cards_load = [multiplayer.network_card_lookup[card] for card in selected_group]
+            result = multiplayer.net.play(multiplayer.game_id, multiplayer.player_id, cards_load)
+            
 
             if result["success"]:
                 for played_card in selected_group:

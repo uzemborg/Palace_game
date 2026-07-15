@@ -18,6 +18,8 @@ opponent_up_cards = []
 opponent_down_cards = []
 opponent_hand = []
 
+opp_base_pos = [(660, 280), (1260, 280)]
+
 pile_card_obj = None
 pile_image = None
 last_pile_size = 0
@@ -76,6 +78,13 @@ def create_opponent_displays():
         text = main.canvas.create_text(main.sx(150), main.sy(150 + i * 150), text="", fill="white", font=("Arial", 16))
         opponent_texts.append(text)
 
+def opponent_up_down_slots(base_x, base_y):
+    top_y = base_y - 150
+    return [
+        (main.sx(base_x - 150), main.sy(top_y)),
+        (main.sx(base_x), main.sy(top_y)),
+        (main.sx(base_x + 150), main.sy(top_y)),]
+
 def render_opponent_upcards(state):
     global opponent_up_cards
     opponents = []
@@ -89,18 +98,17 @@ def render_opponent_upcards(state):
             opponents.append(p)
 
     for row, p in enumerate(opponents):
-        if len(opponents) == 1:
-            start_x = 810
-        elif row == 0:
-            start_x = 250
-        else:
-            start_x = 1450
-
+        if len(opponents) > 1:
+            slots = opponent_up_down_slots(*opp_base_pos[row])
         for col, card in enumerate(p["up"]):
             rank = card["rank"]
             suit = card["suit"]
             img = main.load_card(cards_dict(f"{rank}{suit}"), 5, 5)
-            cid = main.canvas.create_image(main.sx(start_x + col * 150), main.sy(150), image=img)
+            if len(opponents) == 1:
+                cid = main.canvas.create_image(main.sx(810 + col * 150), main.sy(150 + row * 150), image=img)
+            else:
+                x, y = slots[col] if col < len(slots) else slots[-1]
+                cid = main.canvas.create_image(x, y, image=img)
             opponent_up_cards.append(cid)
             main.canvas.tag_raise(cid)
 
@@ -117,12 +125,15 @@ def render_opponent_downcards(state):
             opponents.append(p)
 
     for row, p in enumerate(opponents):
+        if len(opponents) > 1:
+            slots = opponent_up_down_slots(*opp_base_pos[row])
         for col in range(p["down_count"]):
             img = main.load_card(cards_dict("back"), 22, 22)
             if len(opponents) == 1:
                 cid = main.canvas.create_image(main.sx(810 + col * 150), main.sy(150 + row * 150), image=img)
             else:
-                cid = main.canvas.create_image(main.sx(300 + col * 150), main.sy(150 + row * 150), image=img)
+                x, y = slots[col] if col < len(slots) else slots[-1]
+                cid = main.canvas.create_image(x, y, image=img)
             opponent_down_cards.append(cid)
 
 def render_opponent_hand(state):
@@ -138,12 +149,15 @@ def render_opponent_hand(state):
             opponents.append(p)
 
     for row, p in enumerate(opponents):
+        if len(opponents) > 1:
+            base_x, base_y = opp_base_pos[row]
+            start = base_x - (p["hand_count"] - 1) * 20
         for col in range(p["hand_count"]):
             img = main.load_card(cards_dict("back"), 22, 22)
             if len(opponents) == 1:
                 cid = main.canvas.create_image(main.sx(750 + col * 60), main.sy(300 + row * 150), image=img)
             else:
-                cid = main.canvas.create_image(main.sx(300 + col * 60), main.sy(150 + row * 150), image=img)
+                cid = main.canvas.create_image(main.sx(start + col * 40), main.sy(base_y), image=img)
             opponent_hand.append(cid)
 
 def show_setup_phase():

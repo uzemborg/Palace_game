@@ -14,8 +14,8 @@ class Net:
         return requests.get(f"{server}/state/{game_id}").json()
     def hand(self, game_id, player_id):
         return requests.get(f"{server}/hand/{game_id}/{player_id}").json()
-    def play(self, game_id, player_id, card):
-        return requests.post(f"{server}/play/{game_id}", json={"card": card, "player": player_id}).json()
+    def play(self, game_id, player_id, cards):
+        return requests.post(f"{server}/play/{game_id}", json={"cards": cards, "player": player_id}).json()
     def start(self, game_id):
         return requests.post(f"{server}/start/{game_id}").json()
     def player(self, game_id, player_id):

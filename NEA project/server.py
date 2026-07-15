@@ -117,54 +117,68 @@ def play(game_id):
     game = games[game_id]
     data = request.json
     player = data["player"]
-    card = data["card"]
+
+    if "cards" in data:
+        cards = data["cards"]
+    else:
+        cards = [data["card"]]
+
+    if not cards:
+        return {"success": False, "error": "No cards given"}
 
     if player != game["turn"]:
         return {"success": False,"error": "Not your turn"}
-    
+
+    if any(c["rank"] != cards[0]["rank"] for c in cards):
+        return {"success": False, "error": "All cards in a group must be the same rank"}
+
     pdata = game["players"][player]
     if pdata["hand"]:
         source = pdata["hand"]
     else:
         source = pdata["up"]
 
-    found = None
-    for c in source:
-        if (c["rank"] == card["rank"] and c["suit"] == card["suit"]):
-            found = c
-            break
-    if found is None:
-        return {"success": False,"error": "Card not found"}
-    if not can_play(found, game["pile"]):
-        return {"success": False,"error": "Illegal move"}
-    source.remove(found)
-    check_winner(game, player)
-    game["pile"].append(found)
+    found_cards = []
+    remaining = source.copy()
+    for card in cards:
+        match = None
+        for c in remaining:
+            if c["rank"] == card["rank"] and c["suit"] == card["suit"]:
+                match = c
+                break
+        if match is None:
+            return {"success": False,"error": "Card not found"}
+        remaining.remove(match)
+        found_cards.append(match)
 
-    if found["rank"] == "10":
+    if not can_play(found_cards[0], game["pile"]):
+        return {"success": False,"error": "Illegal move"}
+
+    for c in found_cards:
+        source.remove(c)
+        game["pile"].append(c)
+
+    check_winner(game, player)
+
+    burned = False
+    if found_cards[0]["rank"] == "10":
         game["pile"] = []
-        while (source is pdata["hand"] and len(pdata["hand"]) < 3 and game["deck"]):
-            pdata["hand"].append(game["deck"].pop())
+        burned = True
+    elif len(game["pile"]) >= 4:
+        last4 = game["pile"][-4:]
+        if all(c["rank"] == last4[0]["rank"] for c in last4):
+            game["pile"] = []
+            burned = True
+
+    while (source is pdata["hand"] and len(pdata["hand"]) < 3 and game["deck"]):
+        pdata["hand"].append(game["deck"].pop())
+
+    if burned:
         return {
             "success": True,
             "burn": True,
             "extra_turn": True
         }
-
-    if len(game["pile"]) >= 4:
-        last4 = game["pile"][-4:]
-        if all(c["rank"] == last4[0]["rank"] for c in last4):
-            game["pile"] = []
-            while (source is pdata["hand"] and len(pdata["hand"]) < 3 and game["deck"]):
-                pdata["hand"].append(game["deck"].pop())
-            return {
-                "success": True,
-                "burn": True,
-                "extra_turn": True
-            }
-
-    while (source is pdata["hand"] and len(pdata["hand"]) < 3 and game["deck"]):
-        pdata["hand"].append(game["deck"].pop())
 
     game["turn"] = (game["turn"] + 1) % len(game["players"])
     return {"success": True}
