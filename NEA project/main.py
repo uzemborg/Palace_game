@@ -107,6 +107,8 @@ canvas.itemconfigure(slot_box_pile, state="hidden")
 
 deck_label = canvas.create_text(sx(1150), sy(540), text="", font=("Arial", 50, "bold"), fill="white", tags=("deck_label",), state="normal")
 
+turn_indicator = canvas.create_oval(0, 0, 20, 20, fill="white", state="hidden")
+
 home_button_widget = None
 home_button_window = None
 

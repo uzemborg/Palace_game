@@ -3,6 +3,7 @@ from dict import cards_dict
 from network import Net
 import __main__ as main
 import accounts
+from server import state
 
 net = Net()
 game_id = None    
@@ -307,8 +308,21 @@ def refresh_game():
 
     if state_data["turn"] == player_id:
         main.turn = "player"
+        main.canvas.coords(main.turn_indicator, main.sx(580), main.sy(820), main.sx(600), main.sy(840))
+        main.canvas.itemconfigure(main.turn_indicator, state="normal")
     else:
         main.turn = "waiting"
+        opponents = [p for p in state_data["player_data"] if p["id"] != player_id]
+        for row, p in enumerate(opponents):
+            if p["id"] == state_data["turn"]:
+                if len(opponents) == 1:
+                    main.canvas.coords(main.turn_indicator, main.sx(700), main.sy(240), main.sx(720), main.sy(260))
+                elif row == 0:
+                    main.canvas.coords(main.turn_indicator, main.sx(180), main.sy(240), main.sx(200), main.sy(260))
+                else:
+                    main.canvas.coords(main.turn_indicator, main.sx(1380), main.sy(240), main.sx(1400), main.sy(260))
+                main.canvas.itemconfigure(main.turn_indicator, state="normal")
+                break
 
     canvas.itemconfigure(main.deck_label, text=f"{state_data['deck']}")
     main.root.after(500, refresh_game)
