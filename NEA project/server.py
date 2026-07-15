@@ -5,10 +5,6 @@ import traceback
 app=Flask(__name__)
 games={}
 
-@app.errorhandler(Exception)
-def handle_any_error(e):
-    return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
-
 SUITS = ["S", "H", "D", "C"]
 RANKS = ["2", "3", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
